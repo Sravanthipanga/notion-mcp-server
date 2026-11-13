@@ -1,0 +1,10 @@
+node_modules/
+dist/
+logs/*.log
+.env
+.env.*
+!.env.example
+evals/results.json
+evals/.promptfoo/
+.promptfoo/
+*.tsbuildinfo

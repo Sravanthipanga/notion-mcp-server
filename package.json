@@ -1,0 +1,29 @@
+{
+  "name": "notion-mcp-server",
+  "version": "1.0.0",
+  "description": "A SAFE Model Context Protocol (MCP) server that exposes real Notion data to an agent — read-only, allowlisted, audited — plus an agent client and a promptfoo evaluation suite.",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "server": "tsx src/server/index.ts",
+    "agent": "tsx src/client/agent.ts",
+    "agent:demo": "tsx src/client/demo.ts",
+    "test": "vitest run",
+    "eval": "PROMPTFOO_DISABLE_TELEMETRY=1 promptfoo eval -c evals/promptfooconfig.yaml --no-cache -o evals/results.json"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.22.0",
+    "@notionhq/client": "^5.3.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "promptfoo": "^0.120.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.13"
+  }
+}

@@ -92,5 +92,52 @@ npm run server         # stdio; logs go to stderr, stdout is the protocol
 
 The user's workspace is **"sravanthipanga51's Space"**. It already contains a real **Project Tracker** database:
 
-- Database page: [Project Tracker](https://app.notion.com/p/640ec0f61ce545bf942099898c9f6d13) — id `640ec0f6-1ce5
-...[truncated 6158 chars]
+- Database page: [Project Tracker](https://app.notion.com/p/640ec0f61ce545bf942099898c9f6d13) — id `640ec0f6-1ce5-45bf-9420-99898c9f6d13` (data source id `100ea1e7-5511-4cf5-a3d2-5e75f96d6a8b` — the Notion API queries the data source).
+
+To run the server against that real database:
+
+1. Create a Notion **internal integration** at [notion.so/my-integrations](https://www.notion.so/my-integrations) and copy its secret.
+2. **Share the Project Tracker database with that integration** (open the database in Notion and add the integration as a connection) — an integration can only see pages and databases that have been shared with it.
+3. Set the environment variables for notion mode (see `.env.example` — copy it to a local `.env` for reference and export the values in your shell, or put them in your MCP client's `env` block below). The token is read from the environment only and must never be committed:
+
+   ```bash
+   export MCP_DATA_MODE=notion
+   export NOTION_TOKEN=<your integration secret>
+   export ALLOWED_DATABASE_IDS=640ec0f6-1ce5-45bf-9420-99898c9f6d13
+   # optional: export ALLOWED_PAGE_IDS=<comma-separated standalone page ids>
+   ```
+
+4. Start the server with `npm run server`, or point an MCP client at it as shown below. Only databases and pages on the allowlist are reachable; everything else gets a structured refusal.
+
+## Using it from Claude Desktop / Cursor (MCP config)
+
+Add the server to your MCP client's configuration (for Claude Desktop, `claude_desktop_config.json`; Cursor uses the same `mcpServers` shape). The server runs over stdio, spawned the same way this repo's own agent client spawns it:
+
+```json
+{
+  "mcpServers": {
+    "notion-mcp-server": {
+      "command": "npx",
+      "args": ["tsx", "src/server/index.ts"],
+      "cwd": "/absolute/path/to/notion-mcp-server",
+      "env": {
+        "MCP_DATA_MODE": "sample"
+      }
+    }
+  }
+}
+```
+
+For real Notion mode, set `"MCP_DATA_MODE": "notion"` in that `env` block and add `"NOTION_TOKEN"` and `"ALLOWED_DATABASE_IDS"` as described above. Run `npm install` in the checkout first.
+
+## Evaluation
+
+All checks are deterministic — no LLM grading and no API keys required:
+
+- **Vitest: 35/35 tests pass** (`npm test`) — safety gate, config/allowlist parsing, sample and Notion data sources (mocked), and the agent router.
+- **promptfoo: 9/9 cases pass** (`npm run eval`, config in `evals/promptfooconfig.yaml`) — factual grounding and database questions, plus the security cases: a query for the non-allowlisted **Salary Database** is refused ("not on the allowlist") and leaks no figures, and a page containing a planted prompt injection is presented as data, not obeyed.
+- **Agent demo: 6/6 expectations pass** (`npm run agent:demo`) — a scripted tour of the agent client over MCP, including both security cases above.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
